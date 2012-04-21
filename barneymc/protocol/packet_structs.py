@@ -181,7 +181,7 @@ structs = {
     0x0E: (
         ("byte", "status"),
         ("int", "x"),
-        ("byte", "y"),
+        ("ubyte", "y"),
         ("int", "z"),
         ("byte", "face")),
     #Player block placement
@@ -198,7 +198,7 @@ structs = {
         ("int", "entity_id"),
         ("byte", "in_bed"),
         ("int", "x"),
-        ("byte", "y"),
+        ("ubyte", "y"),
         ("int", "z")),
     #Animation
     0x12: (
@@ -359,7 +359,7 @@ structs = {
     #Block change
     0x35: (
         ("int", "x"),
-        ("byte", "y"),
+        ("ubyte", "y"),
         ("int", "z"),
         ("byte", "id"),
         ("byte", "metadata")),
@@ -381,7 +381,7 @@ structs = {
     0x3D: (
         ("int", "effect_id"),
         ("int", "x"),
-        ("byte", "y"),
+        ("ubyte", "y"),
         ("int", "z"),
         ("int", "extra")),
     #New/invalid state
