@@ -26,7 +26,7 @@ class PlayerHandler(client.Client):
 class Server(asyncore.dispatcher):
     settings = {
         'player_handler': PlayerHandler,
-        'interface': '',
+        'host': '',
         'port': 25565,
         'max_players': 20}
 
@@ -38,7 +38,7 @@ class Server(asyncore.dispatcher):
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
         
-        self.bind((self.settings['interface'], self.settings['port']))
+        self.bind((self.settings['host'], self.settings['port']))
         
         self.listen(self.settings['max_players'])
         
@@ -49,3 +49,4 @@ class Server(asyncore.dispatcher):
         else:
             sock, addr = pair
             handler = self.settings['player_handler'](self, sock, **self.settings)
+    

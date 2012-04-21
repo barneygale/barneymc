@@ -16,7 +16,8 @@ class BoundBuffer:
         self.buff += bytes
     
     def flush(self):
-        out, self.buff = self.buff, ''
+        out = self.buff
+        self.buff = ''
         self.save()
         return out
     

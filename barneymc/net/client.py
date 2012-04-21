@@ -7,6 +7,7 @@ from barneymc.protocol.packet import *
 
 class Client(asynchat.async_chat):
     node = NODE_CLIENT
+    stop_packet_loop = False
     
     settings = {
         'port': 25565,
@@ -26,7 +27,10 @@ class Client(asynchat.async_chat):
     def connect2(self):
         self.close()
         self.set_socket(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
-        self.connect((self.settings['host'], self.settings['port']))
+        try:
+            self.connect((self.settings['host'], self.settings['port']))
+        except:
+            self.handle_error()
     
     def send_packet(self, packet):
         packet.direction = self.node
@@ -39,7 +43,7 @@ class Client(asynchat.async_chat):
         if len(data) > 0:
             self.rbuff.append(data)
             self.rbuff.save()
-            while len(self.rbuff.buff):
+            while len(self.rbuff.buff) and not self.stop_packet_loop:
                 try:
                     p = read_packet(self.rbuff, other_node[self.node])
                     self.rbuff.save()

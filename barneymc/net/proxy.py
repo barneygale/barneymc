@@ -1,4 +1,7 @@
 import asyncore
+import traceback
+import socket
+import sys
 
 from barneymc.protocol.packet import *
 import server
@@ -43,11 +46,33 @@ class ClientHandler(server.PlayerHandler):
     
     def start_pass_through(self):
         if not self.pass_through and not self.pass_through_starting:
+            self.stop_packet_loop = True
+            self.server_handler.stop_packet_loop = True
             self.pass_through_starting = True
     
     def handle_close(self):
         self.server_handler.close()
         self.close()
+    
+    def handle_error2(self, err):
+        if err == 0:
+            info = sys.exc_info()
+            if info[0] in (socket.gaierror, socket.error):
+                self.log('Can\'t reach server: %s' % info[1][1])
+                self.send_packet(Packet(ident=0xff, data={'reason': 'brb'}))
+            else:
+                self.log("Got a python exception...")
+                self.log(traceback.format_exc())
+        elif err == 61:
+            self.send_packet(Packet(ident=0xff, data={'reason': 'Server unreachable'}))
+        else:
+            self.send_packet(Packet(ident=0xff, data={'reason': 'Unexpected error'}))
+
+    def handle_error(self):
+        return self.handle_error2(self.socket.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR))
+
+    def log(self, message):
+        print '[DEBUG] %s' % (message.encode("ascii", "ignore"))
 
 class ServerHandler(client.Client):
     node = NODE_CLIENT
@@ -71,6 +96,9 @@ class ServerHandler(client.Client):
     def handle_close(self):
         self.client_handler.close()
         self.close()
+    
+    def handle_error(self):
+        self.client_handler.handle_error2(self.socket.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR))
 
 class Proxy(server.Server):
     def __init__(self, **custom_settings):
