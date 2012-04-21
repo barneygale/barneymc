@@ -42,7 +42,6 @@ names = {
     0x18:    "Mob spawn",
     0x19:    "Entity: painting",
     0x1A:    "Experience orb",
-    0x1B:    "Stance update",
     0x1C:    "Entity velocity",
     0x1D:    "Destroy entity",
     0x1E:    "Entity",
@@ -50,15 +49,15 @@ names = {
     0x20:    "Entity look",
     0x21:    "Entity look and relative move",
     0x22:    "Entity teleport",
-    0x23:   "Entity head look",
+    0x23:    "Entity head look",
     0x26:    "Entity status",
     0x27:    "Attach entity",
     0x28:    "Entity metadata",
-    0x29:   "Entity effect",
-    0x2a:   "Remove entity effect",
-    0x2b:   "Experience update",
+    0x29:    "Entity effect",
+    0x2a:    "Remove entity effect",
+    0x2b:    "Experience update",
     0x32:    "Pre-chunk",
-    0x33:    "Map chunk",
+    0x33:    "Map chunks",
     0x34:    "Multi-block change",
     0x35:    "Block change",
     0x36:    "Block action",
@@ -73,18 +72,18 @@ names = {
     0x68:    "Window items",
     0x69:    "Update progress bar",
     0x6A:    "Transaction",
-    0x6B:   "Creative inventory action",
+    0x6B:    "Creative inventory action",
     0x6C:    "Enchant Item",
     0x82:    "Update sign",
     0x83:    "Map data",
-    0x84:   "Update tile entity",
+    0x84:    "Update tile entity",
     0xC8:    "Increment statistic",
-    0xC9:   "User list item",
+    0xC9:    "User list item",
     0xCA:    "Player abilities",
     0xCB:    "Tab-complete",
     0xCC:    "Locale and view distance",
-    0xFA:   "Plugin Message",
-    0xFE:   "Server list ping",
+    0xFA:    "Plugin Message",
+    0xFE:    "Server list ping",
     0xFF:    "Disconnect"
 }
 structs = {
@@ -188,7 +187,7 @@ structs = {
     #Player block placement
     0x0F: (
         ("int", "x"),
-        ("byte", "y"),
+        ("ubyte", "y"),
         ("int", "z"),
         ("byte", "direction"),
         ("slot", "slot")),
@@ -269,14 +268,6 @@ structs = {
         ("int", "y"),
         ("int", "z"),
         ("short", "count")),
-    #Stance update
-    0x1B: (
-        ("float", "unknown1"),
-        ("float", "unknown2"),
-        ("boolean", "unknown3"),
-        ("boolean", "unknown4"),
-        ("float", "unknown5"),
-        ("float", "unknown6")),
     #Entity velocity
     0x1C: (
         ("int", "entity_id"),
@@ -350,7 +341,7 @@ structs = {
         ("int", "x"),
         ("int", "z"),
         ("bool", "load")),
-    #Map chunk
+    #Map chunks
     0x33: (
         ("int", "x_chunk"),
         ("int", "z_chunk"),
@@ -384,7 +375,7 @@ structs = {
         ("double", "x"),
         ("double", "y"),
         ("double", "z"),
-        ("float", "unknown"),
+        ("float", "radius"),
         ("int", "data_size")),
     #Sound effect
     0x3D: (
@@ -400,7 +391,7 @@ structs = {
     #Thunderbolt
     0x47: (
         ("int", "entity_id"),
-        ("bool", "unknown"),
+        ("bool", "not_used"),
         ("int", "x"),
         ("int", "y"),
         ("int", "z")),
@@ -459,7 +450,7 @@ structs = {
         ("string16", "line_4")),
     #Map data
     0x83: (
-        ("short", "unknown1"),
+        ("short", "item_id"),
         ("short", "map_id"),
         ("ubyte", "data_size")),
     #Update tile entity

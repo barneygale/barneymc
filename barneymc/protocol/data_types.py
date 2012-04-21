@@ -1,5 +1,6 @@
 import struct
 import nbt
+import StringIO
 
 data_types = {
     "ubyte":  ('B', 1),
@@ -48,7 +49,7 @@ def pack(data_type, data):
         if data['id'] > 0:
             o += pack('byte',  data['amount'])
             o += pack('short', data['damage'])
-            if data['id'] in self.enchantable:
+            if data['id'] in enchantable:
                 if 'enchantment_data' in data:
 
                     o += pack('short', len(data['enchantment_data']))
@@ -103,7 +104,7 @@ def unpack(bbuff, data_type):
         if o["id"] > 0:
             o["amount"] = unpack(bbuff, 'byte')
             o["damage"] = unpack(bbuff, 'short')
-            if o['id'] in packet_definitions.enchantable:
+            if o['id'] in enchantable:
                 length = unpack(bbuff, 'short')
                 if length > 0:
                     ench = bbuff.recv(length)

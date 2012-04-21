@@ -12,10 +12,18 @@ class BoundBuffer:
         o, self.buff = self.buff[:bytes], self.buff[bytes:]
         return o
 
+    def append(self, bytes):
+        self.buff += bytes
+    
+    def flush(self):
+        out, self.buff = self.buff, ''
+        self.save()
+        return out
+    
     def save(self):
-        self.backup = self.buff
+        self.backup = str(self.buff)
     
     def revert(self):
-        self.buff = self.backup
+        self.buff = str(self.backup)
     
     recv = read

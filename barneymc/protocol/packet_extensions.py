@@ -28,13 +28,13 @@ class Extension17:
 class Extension33:
     @classmethod
     def decode_extra(self, packet, bbuff):
-        packet.data['data'] = unpack_array_fast(bbuff, 'byte', packet.data['data_size'])
+        packet.data['data'] = unpack_array_fast(bbuff, 'ubyte', packet.data['data_size'])
         del packet.data["data_size"]
     
     @classmethod
     def encode_extra(self, packet):
         packet.data['data_size'] = len(packet.data['data'])
-        return pack_array_fast('byte', packet.data['data'])
+        return pack_array_fast('ubyte', packet.data['data'])
 
 @extension(0x34)
 class Extension34:
@@ -70,7 +70,7 @@ class Extension34:
 class Extension3C:
     @classmethod
     def decode_extra(self, packet, bbuff):
-        records = unpack_array_fast('byte', packet.data['data_size']*3)
+        records = unpack_array_fast(bbuff, 'byte', packet.data['data_size']*3)
         i = 0
         packet.data["blocks"] = []
         while i < packet.data['data_size']*3:

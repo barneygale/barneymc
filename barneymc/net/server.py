@@ -2,8 +2,9 @@ import socket
 import asyncore
 import asynchat
 
+from barneymc.protocol.packet import *
+from barneymc.protocol import bound_buffer
 import client
-from protocol.packet import *
 
 class PlayerHandler(client.Client):
     node = NODE_SERVER
@@ -12,6 +13,7 @@ class PlayerHandler(client.Client):
         'debug_out': False}
 
     def __init__(self, rserver, socket, **custom_settings):
+        self.rbuff = bound_buffer.BoundBuffer()
         self.server = rserver
         self.settings.update(custom_settings)
         asynchat.async_chat.__init__(self, sock = socket)
@@ -26,10 +28,7 @@ class Server(asyncore.dispatcher):
         'player_handler': PlayerHandler,
         'interface': '',
         'port': 25565,
-        'max_players': 20,
-        'motd': 'A Minecraft Server'}
-    
-    players = []
+        'max_players': 20}
 
     def __init__(self, **custom_settings):
         self.settings.update(custom_settings)
@@ -50,4 +49,3 @@ class Server(asyncore.dispatcher):
         else:
             sock, addr = pair
             handler = self.settings['player_handler'](self, sock, **self.settings)
-            self.players.append(handler)

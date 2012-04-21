@@ -1,6 +1,5 @@
 import struct
 import collections
-import sys
 from StringIO import StringIO
 import gzip
 
@@ -85,10 +84,10 @@ class TAG_Compound(TAG):
     def encode(self):
         o = ''
         for name, child in self.value.items():
-            o += pack(child.type, 'b')       #Type
-            o += pack(len(name), 'h')        #Name length
-            o += name              #Name
-            o += child.encode()               #Payload
+            o += pack(child.type, 'b') #Type
+            o += pack(len(name), 'h')  #Name length
+            o += name                  #Name
+            o += child.encode()        #Payload
         return o + '\x00'
     def normalized(self):
         return dict([(name, child.normalized()) for name, child in self.value.items()])

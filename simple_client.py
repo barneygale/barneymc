@@ -1,9 +1,8 @@
 import asyncore
 
-from net import client
-from protocol import bound_buffer
-from protocol.packet import *
-
+from barneymc.protocol.packet import *
+from barneymc.protocol import bound_buffer
+from barneymc.net import client
 
 class SimpleClient(client.Client):
     spawned = False
@@ -16,6 +15,8 @@ class SimpleClient(client.Client):
             0xff: self.disconnect}
         
         client.Client.__init__(self, **settings)
+        
+        self.connect2()
 
         self.send_packet(Packet(ident=0x02, data={'username_host': '%s;%s:%d' % (self.settings['username'], self.settings['host'], self.settings['port'])}))
 

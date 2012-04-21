@@ -1,30 +1,33 @@
 import socket
 import asynchat
 
-from protocol import bound_buffer
-from protocol.packet import *
+from barneymc.protocol import bound_buffer
+from barneymc.protocol.packet import *
 
 
 class Client(asynchat.async_chat):
     node = NODE_CLIENT
+    
     settings = {
-        'host': 'localhost',
         'port': 25565,
         'debug_in': False,
         'debug_out': False}
 
-    rbuff = bound_buffer.BoundBuffer()
     handlers = {}
 
     def __init__(self, **custom_settings):
+        self.rbuff = bound_buffer.BoundBuffer()
         self.settings.update(custom_settings)
         
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((self.settings['host'], self.settings['port']))
-        
-        asynchat.async_chat.__init__(self, sock = s)
+        asynchat.async_chat.__init__(self, sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM))
         self.set_terminator(None)
 
+    #Start a new connection
+    def connect2(self):
+        self.close()
+        self.set_socket(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
+        self.connect((self.settings['host'], self.settings['port']))
+    
     def send_packet(self, packet):
         packet.direction = self.node
         if self.settings['debug_out']:
@@ -34,15 +37,16 @@ class Client(asynchat.async_chat):
 
     def collect_incoming_data(self, data):
         if len(data) > 0:
-            self.rbuff.buff += data
-            while True:
+            self.rbuff.append(data)
+            self.rbuff.save()
+            while len(self.rbuff.buff):
                 try:
-                    self.rbuff.save()
                     p = read_packet(self.rbuff, other_node[self.node])
+                    self.rbuff.save()
                     if self.settings['debug_in']:
                         print p
                     
-                    self.handlers.get(p.ident, self.default_handler)(p)
+                    self.dispatch_packet(p)
             
                 except bound_buffer.BufferUnderflowException:
                     self.rbuff.revert()
@@ -59,3 +63,11 @@ class Client(asynchat.async_chat):
         
     def print_packet(self, packet):
         print packet
+    
+    def handle_error(self):
+        raise
+    
+    #Dispatch a packet to its handler
+    def dispatch_packet(self, p):
+        self.handlers.get(p.ident, self.default_handler)(p)
+        

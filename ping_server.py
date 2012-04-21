@@ -1,7 +1,7 @@
 import sys
 import socket
 
-from protocol.packet import *
+from barneymc.protocol.packet import *
 
 def get_info(host, port):
     #Set up our socket
@@ -9,7 +9,7 @@ def get_info(host, port):
     s.connect((host, port))
 
     #Send 0xFE: Server list ping
-    ping = Packet(ident = 0xFE, direction = TO_SERVER)
+    ping = Packet(ident = 0xFE)
     s.send(ping.encode())
 
     #Receive a response
