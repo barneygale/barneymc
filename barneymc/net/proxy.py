@@ -71,9 +71,6 @@ class ClientHandler(server.PlayerHandler):
     def handle_error(self):
         return self.handle_error2(self.socket.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR))
 
-    def log(self, message):
-        print '[DEBUG] %s' % (message.encode("ascii", "ignore"))
-
 class ServerHandler(client.Client):
     node = NODE_CLIENT
     def __init__(self, client_handler, **custom_settings):
@@ -94,8 +91,9 @@ class ServerHandler(client.Client):
         self.client_handler.dispatch_packet(packet)
 
     def handle_close(self):
-        self.client_handler.close()
-        self.close()
+        if self.connected2:
+            self.client_handler.close()
+            self.close()
     
     def handle_error(self):
         self.client_handler.handle_error2(self.socket.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR))
