@@ -5,6 +5,11 @@ import asynchat
 from barneymc.protocol.packet import *
 from barneymc.protocol import bound_buffer
 import client
+import encryption
+import time #todo: remove
+import StringIO
+
+import M2Crypto as m2crypto
 
 class PlayerHandler(client.Client):
     node = NODE_SERVER
@@ -14,6 +19,7 @@ class PlayerHandler(client.Client):
 
     def __init__(self, rserver, socket, **custom_settings):
         self.rbuff = bound_buffer.BoundBuffer()
+        self.stream_cipher = encryption.StreamCipher()
         self.server = rserver
         self.settings.update(custom_settings)
         asynchat.async_chat.__init__(self, sock = socket)
@@ -32,6 +38,18 @@ class Server(asyncore.dispatcher):
 
     def __init__(self, **custom_settings):
         self.settings.update(custom_settings)
+        
+        #Generate keypair
+        self.key_pair = m2crypto.RSA.gen_key(1024, 0x10001, callback=lambda: True)
+        
+        #Export public key to minecraft format
+        d = encryption.export_public_key(self.key_pair)
+        
+        #Convert to byte array
+        d = [ord(i) for i in d]
+        
+        #Save
+        self.encoded_public_key = d
         
         asyncore.dispatcher.__init__(self)
         

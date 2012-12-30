@@ -18,7 +18,7 @@ class SimpleClient(client.Client):
         
         self.connect2()
 
-        self.send_packet(Packet(ident=0x02, data={'username_host': '%s;%s:%d' % (self.settings['username'], self.settings['host'], self.settings['port'])}))
+        self.send_packet(Packet(ident=0x02, data={'protocol_version': 32, 'username': self.settings['username'], 'host': self.settings['host'], 'port': self.settings['port'])}))
 
     def login(self, packet):
         pass        

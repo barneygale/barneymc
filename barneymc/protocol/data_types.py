@@ -49,19 +49,19 @@ def pack(data_type, data):
         if data['id'] > 0:
             o += pack('byte',  data['amount'])
             o += pack('short', data['damage'])
-            if data['id'] in enchantable:
-                if 'enchantment_data' in data:
+            #if data['id'] in enchantable:
+            if 'enchantment_data' in data:
 
-                    o += pack('short', len(data['enchantment_data']))
-                    o += data['enchantment_data']
+                o += pack('short', len(data['enchantment_data']))
+                o += data['enchantment_data']
 
-                elif 'enchantments' in data:
-                    ench = nbt.encode(data['enchantments'])
-                    ench = nbt.compress(ench)
-                    o += pack('short', len(ench))
-                    o += ench
-                else:
-                    o += pack('short', -1)
+            elif 'enchantments' in data:
+                ench = nbt.encode(data['enchantments'])
+                ench = nbt.compress(ench)
+                o += pack('short', len(ench))
+                o += ench
+            else:
+                o += pack('short', -1)
                 
         return o
     if data_type == "metadata":
@@ -104,16 +104,16 @@ def unpack(bbuff, data_type):
         if o["id"] > 0:
             o["amount"] = unpack(bbuff, 'byte')
             o["damage"] = unpack(bbuff, 'short')
-            if o['id'] in enchantable:
-                length = unpack(bbuff, 'short')
-                if length > 0:
-                    ench = bbuff.recv(length)
-                    try: 
-                        ench = nbt.decompress(ench)
-                        ench = nbt.decode(StringIO.StringIO(ench))
-                        o["enchantments"] = ench
-                    except:
-                        o["enchantment_data"] = ench
+            #if o['id'] in enchantable:
+            length = unpack(bbuff, 'short')
+            if length > 0:
+                ench = bbuff.recv(length)
+                try: 
+                    ench = nbt.decompress(ench)
+                    ench = nbt.decode(StringIO.StringIO(ench))
+                    o["enchantments"] = ench
+                except:
+                    o["enchantment_data"] = ench
         return o
     if data_type == "metadata":
         metadata = []
@@ -146,23 +146,27 @@ def pack_real(data_type, data):
     return struct.pack('!'+data_type, data)
 
 def unpack_array(bbuff, data_type, count):
-    a = []
-    for i in range(count):
-        a.append(unpack(bbuff, data_type))
-    return a
+    #fast
+    if data_type in data_types:
+        data_type = data_types[data_type]
+        length = data_type[1] * count
+        format = data_type[0] * count
+        return struct.unpack_from(format, bbuff.recv(length))
+    #slow
+    else:
+        a = []
+        for i in range(count):
+            a.append(unpack(bbuff, data_type))
+        return a
 
 def pack_array(data_type, data):
-    o = ''
-    for d in data:
-        o += pack(data_type, d)
-    return o
-
-def unpack_array_fast(bbuff, data_type, count):
-    data_type = data_types[data_type]
-    length = data_type[1] * count
-    format = data_type[0] * count
-    return struct.unpack_from(format, bbuff.recv(length))
-    
-def pack_array_fast(data_type, data):
-    data_type = data_types[data_type]
-    return struct.pack(data_type[0]*len(data), *data)
+    #fast
+    if data_type in data_types:
+        data_type = data_types[data_type]
+        return struct.pack(data_type[0]*len(data), *data)
+    #slow
+    else:
+        o = ''
+        for d in data:
+            o += pack(data_type, d)
+        return o

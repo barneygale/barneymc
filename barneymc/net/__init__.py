@@ -1,1 +1,1 @@
-all = ['client', 'server']
+all = ['client', 'server', 'proxy', 'encryption']

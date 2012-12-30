@@ -17,6 +17,8 @@ class Packet:
         #Ident
         self.ident = unpack(bbuff, 'ubyte')
         
+        #print "###", self.ident
+        
         #Payload
         for data_type, name in structs[self.ident][self.direction]:
             self.data[name] = unpack(bbuff, data_type)

@@ -56,13 +56,15 @@ names = {
     0x29:    "Entity effect",
     0x2a:    "Remove entity effect",
     0x2b:    "Experience update",
-    0x32:    "Pre-chunk",
     0x33:    "Map chunks",
     0x34:    "Multi-block change",
     0x35:    "Block change",
     0x36:    "Block action",
+    0x37:    "Block break animation",
+    0x38:    "Map chunk bulk",
     0x3C:    "Explosion",
     0x3D:    "Sound effect",
+    0x3E:    "Named Sound Effect",
     0x46:    "New/invalid state",
     0x47:    "Thunderbolt",
     0x64:    "Open window",
@@ -82,7 +84,10 @@ names = {
     0xCA:    "Player abilities",
     0xCB:    "Tab-complete",
     0xCC:    "Locale and view distance",
+    0xCD:    "Client statuses",
     0xFA:    "Plugin Message",
+    0xFC:    "Encryption Response",
+    0xFD:    "Encryption Request",
     0xFE:    "Server list ping",
     0xFF:    "Disconnect"
 }
@@ -90,29 +95,20 @@ structs = {
     #Keep-alive
     0x00: ("int", "value"),
     #Login request
-    0x01:    { 
-        CLIENT_TO_SERVER: (
-            ("int", "protocol_version"),
-            ("string16", "username"),
-            ("string16", "not_used_1"),
-            ("int", "not_used_2"),
-            ("int", "not_used_3"),
-            ("byte", "not_used_4"),
-            ("byte", "not_used_5"),
-            ("ubyte", "not_used_6")),
-        SERVER_TO_CLIENT: (
+    0x01: (
             ("int", "entity_id"),
-            ("string16", "not_used_1"),
             ("string16", "level_type"),
-            ("int", "game_mode"),
-            ("int", "dimension"),
-            ("byte", "not_used_2"),
-            ("byte", "world_height"),
-            ("ubyte", "max_players"))},
+            ("byte", "game_mode"),
+            ("byte", "dimension"),
+            ("byte", "difficulty"),
+            ("byte", "not_used"),
+            ("ubyte", "max_players")),
     #Handshake
-    0x02:    {
-        CLIENT_TO_SERVER: ("string16", "username_host"),
-        SERVER_TO_CLIENT: ("string16", "connection_hash")},
+    0x02: (
+        ("byte", "protocol_version"),
+        ("string16", "username"),
+        ("string16", "host"),
+        ("int", "port")),
     #Chat message
     0x03: ("string16", "text"),
     #Time update
@@ -121,8 +117,7 @@ structs = {
     0x05: (
         ("int", "entity_id"),
         ("short", "slot"),
-        ("short", "item_id"),
-        ("short", "damage")),
+        ("slot", "item")),
     #Spawn position
     0x06: (
         ("int", "x"),
@@ -190,7 +185,10 @@ structs = {
         ("ubyte", "y"),
         ("int", "z"),
         ("byte", "direction"),
-        ("slot", "slot")),
+        ("slot", "slot"),
+        ("byte", "cursor_x"),
+        ("byte", "cursor_y"),
+        ("byte", "cursor_z")),
     #Holding change
     0x10: ("short", "slot"),
     #Use bed
@@ -217,7 +215,8 @@ structs = {
         ("int", "z"),
         ("byte", "rotation"),
         ("byte", "pitch"),
-        ("short", "current_item")),
+        ("short", "current_item"),
+        ("metadata", "metadata")),
     #Pickup spawn
     0x15: (
         ("int", "entity_id"),
@@ -252,6 +251,9 @@ structs = {
         ("byte", "yaw"),
         ("byte", "pitch"),
         ("byte", "head_yaw"),
+        ("short", "velocity_z"),
+        ("short", "velocity_y"),
+        ("short", "velocity_x"),
         ("metadata", "metadata")),
     #Entity: painting
     0x19: (
@@ -275,7 +277,7 @@ structs = {
         ("short", "y_velocity"),
         ("short", "z_velocity")),
     #Destroy entity
-    0x1D: ("int", "entity_id"),
+    0x1D: ("byte", "data_size"),      
     #Entity
     0x1E: ("int", "entity_id"),
     #Entity relative move
@@ -336,11 +338,6 @@ structs = {
         ("float", "experience_bar_maybe"),
         ("short", "level_maybe"),
         ("short", "total_experience_maybe")),
-    #Pre-chunk
-    0x32: (
-        ("int", "x"),
-        ("int", "z"),
-        ("bool", "load")),
     #Map chunks
     0x33: (
         ("int", "x_chunk"),
@@ -348,8 +345,7 @@ structs = {
         ("bool", "ground_up_contiguous"),
         ("short", "primary_bitmap"),
         ("short", "secondary_bitmap"),
-        ("int", "data_size"),
-        ("int", "not_used_1")),
+        ("int", "data_size")),
     #Multi-block change
     0x34: (
         ("int", "x_chunk"),
@@ -361,7 +357,7 @@ structs = {
         ("int", "x"),
         ("ubyte", "y"),
         ("int", "z"),
-        ("byte", "id"),
+        ("short", "id"),
         ("byte", "metadata")),
     #Block action
     0x36: (
@@ -369,7 +365,19 @@ structs = {
         ("short", "y"),
         ("int", "z"),
         ("byte", "type_state"),
-        ("byte", "pitch_direction")),
+        ("byte", "pitch_direction"),
+        ("short", "block_id")),
+    #Block break animation
+    0x37: (
+        ("int", "entity_id"),
+        ("int", "x"),
+        ("int", "y"),
+        ("int", "z"),
+        ("byte", "face")),
+    #Map chunk bulk
+    0x38: (
+        ("short", "chunk_column_count"),
+        ("int", "data_size")),
     #Explosion
     0x3C: (
         ("double", "x"),
@@ -384,6 +392,14 @@ structs = {
         ("ubyte", "y"),
         ("int", "z"),
         ("int", "extra")),
+    #TODO: Unknown
+    0x3E: (
+        ("string16", "sound_name"),
+        ("int", "x"),
+        ("int", "y"),
+        ("int", "z"),
+        ("float", "volume"),
+        ("byte", "pitch")),
     #New/invalid state
     0x46: (
         ("byte", "reason"),
@@ -459,9 +475,7 @@ structs = {
         ("short", "y"),
         ("int", "z"),
         ("byte", "action"),
-        ("int", "custom_1"),
-        ("int", "custom_2"),
-        ("int", "custom_3")),
+        ("short", "data_length")),
     #Increment statistic
     0xC8: (
         ("int", "statistic_id"),
@@ -473,20 +487,27 @@ structs = {
         ("short", "ping")),
     #Player abilities
     0xCA: (
-        ("bool", "invulnerable"),
-        ("bool", "is_flying"),
-        ("bool", "can_fly"),
-        ("bool", "instabreak")),
+        ("ubyte", "flags"),
+        ("byte", "walking_speed"),
+        ("byte", "flying_speed")),
     #Tab-complete
     0xCB: ("string16", "text"),
     #Locale and view distance
     0xCC: (
         ("string16", "locale"),
-        ("int", "view_distance")),
+        ("byte", "view_distance"),
+        ("byte", "chat_flags"),
+        ("byte", "unknown")),
+    #Client statuses
+    0xCD: ("byte", "payload"),
     #Plugin message
     0xFA: (
         ("string16", "channel"),
         ("short", "data_size")),
+    #Encryption response
+    0xFC: (), #Covered entirely in extensions
+    #Encryption request
+    0xFD: ("string16", "server_id"),
     #Server ping
     0xFE: (),
     #Disconnect

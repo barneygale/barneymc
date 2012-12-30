@@ -2,6 +2,7 @@ import asyncore
 import traceback
 import socket
 import sys
+import time
 
 from barneymc.protocol.packet import *
 import server
@@ -18,19 +19,24 @@ class ClientHandler(server.PlayerHandler):
 
         self.collect_incoming_data_old = self.collect_incoming_data
         self.collect_incoming_data = self.collect_incoming_data_new
-        
+    
     def collect_incoming_data_new(self, data):
+        #print "Collected data from client!"
         if self.pass_through:
+            #print "Passing through data..."
             self.server_handler.push(data)
         else:
             if self.pass_through_starting:
+                #print "Pass through signal received by client!"
                 #Flush buffers
                 self.push(self.server_handler.rbuff.flush())
-                self.server_handler.push(self.rbuff.flush())
+                self.server_handler.push(data+self.rbuff.flush())
                 
                 self.pass_through = True
                 self.pass_through_starting = False
+                #print "Pass through finalized!"
             else:
+                #print "CLIENT got pass-through weirdness"
                 self.collect_incoming_data_old(data)
     
     def default_handler(self, packet):
@@ -46,9 +52,11 @@ class ClientHandler(server.PlayerHandler):
     
     def start_pass_through(self):
         if not self.pass_through and not self.pass_through_starting:
+            #print "Pass through starting..."
             self.stop_packet_loop = True
             self.server_handler.stop_packet_loop = True
             self.pass_through_starting = True
+            #print "Pass through initiated!"
     
     def handle_close(self):
         self.server_handler.close()
@@ -71,6 +79,12 @@ class ClientHandler(server.PlayerHandler):
     def handle_error(self):
         return self.handle_error2(self.socket.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR))
 
+    def connect2_server(self):
+        if not self.server.check_connect():
+            self.send_packet(Packet(ident=0xff, data={'reason': 'Throttled, please try again!'}))
+            return
+        
+        client.Client.connect2(self.server_handler)
 class ServerHandler(client.Client):
     node = NODE_CLIENT
     def __init__(self, client_handler, **custom_settings):
@@ -79,12 +93,29 @@ class ServerHandler(client.Client):
 
         self.collect_incoming_data_old = self.collect_incoming_data
         self.collect_incoming_data = self.collect_incoming_data_new
-        
+    
+    def connect2(self):
+        self.client_handler.connect2_server()
+    
     def collect_incoming_data_new(self, data):
         if self.client_handler.pass_through:
             self.client_handler.push(data)
+            #print "SERVER collect PT"
         else:
-            self.collect_incoming_data_old(data)
+            #print self.client_handler.pass_through_starting
+            #print "BLAH!"
+            if self.client_handler.pass_through_starting:
+                #print "Pass through signal received by server!"
+                #Flush buffers
+                self.push(self.client_handler.rbuff.flush())
+                self.client_handler.push(data+self.rbuff.flush())
+                
+                self.client_handler.pass_through = True
+                self.client_handler.pass_through_starting = False
+            else:
+                #print "SERVER collect not PT"
+                self.collect_incoming_data_old(data)
+                
 
     def dispatch_packet(self, packet):
         #We hand all packets we receive to the ClientHandler's packet handlers
@@ -102,3 +133,16 @@ class Proxy(server.Server):
     def __init__(self, **custom_settings):
         server.Server.__init__(self, **custom_settings)
         self.settings['player_handler'] = self.settings.get('player_handler', ClientHandler)
+        self.settings['throttle'] = self.settings.get('throttle', 0)
+        self.last_connect = 0
+    def check_connect(self):
+        if self.settings['throttle'] == 0:
+            return True
+        
+        t = time.time()
+        if t > (self.last_connect + self.settings['throttle']):
+            self.last_connect = t
+            return True
+        
+        return False
+            

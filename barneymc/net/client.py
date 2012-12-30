@@ -3,6 +3,7 @@ import asynchat
 
 from barneymc.protocol import bound_buffer
 from barneymc.protocol.packet import *
+from barneymc.net import encryption
 
 
 class Client(asynchat.async_chat):
@@ -15,10 +16,13 @@ class Client(asynchat.async_chat):
         'debug_in': False,
         'debug_out': False}
 
+
     handlers = {}
 
     def __init__(self, **custom_settings):
         self.rbuff = bound_buffer.BoundBuffer()
+        self.stream_cipher = encryption.StreamCipher()
+        
         self.settings.update(custom_settings)
         
         asynchat.async_chat.__init__(self, sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM))
@@ -41,11 +45,14 @@ class Client(asynchat.async_chat):
         if self.settings['debug_out']:
             print packet
         data = packet.encode()
+        data = self.stream_cipher.encrypt(data, self.node)
         self.push(data)
 
     def collect_incoming_data(self, data):
+        #print "Client collecting..."
         self.connected2 = True
         if len(data) > 0:
+            data = self.stream_cipher.decrypt(data, other_node[self.node])
             self.rbuff.append(data)
             self.rbuff.save()
             while len(self.rbuff.buff) and not self.stop_packet_loop:
